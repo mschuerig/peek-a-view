@@ -27,30 +27,33 @@ Mount the PeekAView engine in config/routes.rb
       mount PeekAView::Engine => '/peek-a-view'
     end
 
-Write YAML files defining stub objects to use in your views and place
-them in
+Write view definitions in {spec|test}/peek_a_view.rb like this
 
-    test/fixtures/view_stubs/<controller>/<template>.yml
+    PeekAView.configure do |config|
+      # Define stubbing methods or use the ones you already have for your tests.
+      def stub_article
+        ...
+      end
 
-for example
+      config.all_views do |v|
+        v.current_user = User.new
+      end
 
-    test/fixtures/view_stubs/posts/index.yml
+      config.view 'articles/index' do |v|
+        v.articles = (1..10).map { |i| stub_article }
+      end
 
-Start your application and point your browser at
+      config.view 'articles/new', 'articles/edit' do |v|
+        v.params  = { id: '1' } # needed for URL generation
+        v.article = stub_article
+      end
+    end
 
-    http://localhost:3000/peek-a-view/posts/index
+Start your rails application and point your browser at
 
+    http://localhost:3000/peek-a-view/
 
-## When (will it work properly)?
-
-Not quite yet.
-
-### What's broken?
-
-* Make sure models from all paths (app, engines, ...) are loaded
-  before reading stubs.
-* Writing the YAML-stubs is a nuisance; I'm looking for a good way
-  to include parsed content instead of textual inclusion.
+If everything went well, you see a list of links to your views.
 
 
 This project rocks and uses MIT-LICENSE.

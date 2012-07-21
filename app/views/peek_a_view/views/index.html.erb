@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Peek-a-View</title>
+</head>
+<body>
+<ul>
+    <% @views.each do |v| %>
+      <li>
+          <%= link_to v, peek_a_view_engine.view_path(v) %>
+      </li>
+    <% end %>
+</ul>
+</body>
+</html>
