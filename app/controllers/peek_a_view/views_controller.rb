@@ -2,13 +2,25 @@ module PeekAView
   class ViewsController < ActionController::Base
 
     def index
-      PeekAView.load_stubs
+      PeekAView.load_views
       @views = config.views.keys.sort
-      render template: '/peek_a_view/views/index'
+      respond_to do |format|
+        format.html do
+          render template: '/peek_a_view/views/index'
+        end
+        format.json do
+          absolute = {
+            protocol: request.protocol,
+            host:     request.host,
+            port:     request.port
+          }
+          render json: @views.map { |v| peek_a_view_engine.view_url(v, absolute) }
+        end
+      end
     end
 
     def show
-      PeekAView.load_stubs
+      PeekAView.load_views
 
       if (view = find_view)
         render_template(view, params)

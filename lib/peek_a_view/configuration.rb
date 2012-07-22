@@ -5,23 +5,23 @@ module PeekAView
   class Configuration < ActiveSupport::OrderedOptions
     def initialize(*)
       super
-      clear_stubs!
+      clear_views!
     end
 
-    def stubs_file
-      Array(stubs_path).map { |p| File.join(Rails.root, p) }.find { |p| File.file?(p) }
+    def views_file
+      Array(views_path).map { |p| File.join(Rails.root, p) }.find { |p| File.file?(p) }
     end
 
-    def load_stubs
-      clear_stubs!
-      if (file = stubs_file)
+    def load_views
+      clear_views!
+      if (file = views_file)
         load file
       else
         raise "No peek-a-view definitions found." # TODO proper exception class
       end
     end
 
-    def clear_stubs!
+    def clear_views!
       @views  = { }
       @common = []
     end
