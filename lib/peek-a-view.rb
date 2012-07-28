@@ -1,1 +1,1 @@
-require 'peek_a_view'
+require_relative 'peek_a_view'
