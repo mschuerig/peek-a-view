@@ -1,6 +1,20 @@
 namespace 'peek-a-view' do
 
-  task :prepare => :environment do
+  task :prepare do
+    ENV['PEEK_A_VIEW'] = 'true'
+
+    # Up to here, Rails is running in the development environment, but we
+    # want the test environment. Getting there takes some coaxing.
+    Rails.env          = (ENV['RAILS_ENV'] ||= 'test')
+    # reset cached paths
+    Rails.application.config.instance_variable_set(:@paths, nil)
+    # load the environment again
+    require Rails.root + "config/environment"
+
+    Rake::Task['peek-a-view:run_server'].invoke
+  end
+
+  task :run_server do
     require 'open-uri'
     require 'capybara/rails'
     require 'capybara/server'
@@ -24,37 +38,43 @@ namespace 'peek-a-view' do
     end
   end
 
-
   desc "Run all checks"
-  task :check => [:validate, :yslow]
+  task :check => 'check:run'
 
+  namespace :check do
+    task :run => [:html, :speed]
 
-  desc "Check view markup with validator.nu"
-  task :validate => :prepare do
-    require 'peek_a_view/tools/html_validator'
-
-    validator_uri = ENV['HTML_VALIDATOR'] || 'http://localhost:8888/'
-    validator     = PeekAView::Tools::HtmlValidator.new(
-      validator_uri: validator_uri,
-      prefix:        @index_uri
-    )
-    validator.clean_reports
-
-    @view_uris.each do |uri|
-      validator.report(uri)
+    task :prepare do
+      Rake::Task['peek-a-view:prepare'].invoke
     end
-  end
 
+    desc "Check view markup with validator.nu"
+    task :html => :prepare do
+      require 'peek_a_view/tools/html_validator'
 
-  desc "Check views with YSlow"
-  task :yslow => :prepare do
-    require 'peek_a_view/tools/yslow'
+      validator_uri = ENV['HTML_VALIDATOR'] || 'http://localhost:8888/'
+      validator     = PeekAView::Tools::HtmlValidator.new(
+        validator_uri: validator_uri,
+        prefix:        @index_uri,
+        encoding:      Rails.configuration.encoding
+      )
+      validator.clean_reports
 
-    yslow = PeekAView::Tools::YSlow.new(prefix: @index_uri)
-    yslow.clean_reports
+      @view_uris.each do |uri|
+        validator.report(uri)
+      end
+    end
 
-    @view_uris.each do |uri|
-      yslow.report(uri)
+    desc "Check views with YSlow"
+    task :speed => :prepare do
+      require 'peek_a_view/tools/yslow'
+
+      yslow = PeekAView::Tools::YSlow.new(prefix: @index_uri)
+      yslow.clean_reports
+
+      @view_uris.each do |uri|
+        yslow.report(uri)
+      end
     end
   end
 end
