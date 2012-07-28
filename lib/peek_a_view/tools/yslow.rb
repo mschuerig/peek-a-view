@@ -6,11 +6,11 @@ module PeekAView
     class YSlow < Checker
 
       def check(uri)
-        system "phantomjs '#{yslow_script}' -f tap '#{uri}'"
+        system "phantomjs '#{yslow_script}' -f plain '#{uri}'"
       end
 
       def report(uri)
-        system "phantomjs '#{yslow_script}' -f tap '#{uri}' > '#{report_file(uri)}'"
+        system "phantomjs '#{yslow_script}' -f junit '#{uri}' > '#{report_file(uri)}'"
       end
 
       private
@@ -24,7 +24,7 @@ module PeekAView
       end
 
       def report_file(uri)
-        report_path(uri, '.tap')
+        report_path(uri, '.xml')
       end
     end
   end
