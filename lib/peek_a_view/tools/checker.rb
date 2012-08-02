@@ -15,13 +15,6 @@ module PeekAView
 
       protected
 
-      def print_hash(out, title, hash)
-        out.puts title
-        hash.each do |k, v|
-          out.puts "#{k}: #{v}"
-        end
-      end
-
       def report_dir
         raise NotImplementedError,
               "report_dir must be overridden in subclasses of #{self.class}."

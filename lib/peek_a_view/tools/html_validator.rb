@@ -21,15 +21,27 @@ module PeekAView
       end
 
       def check(uri)
-        @validator.validate_uri(uri)
+        results = validate(uri)
+        puts "Valid: #{results.is_valid?}"
+        puts
+        puts 'Errors'
+        puts results.errors.map(&:message)
+        puts
+        puts 'Warnings'
+        puts results.warnings.map(&:message)
+        puts
       end
 
       def report(uri)
-        results = check(uri)
+        results = validate(uri)
         write_report(uri, results)
       end
 
       private
+
+      def validate(uri)
+        @validator.validate_uri(uri)
+      end
 
       def write_report(uri, results)
         xml = Builder::XmlMarkup.new(indent: 2)

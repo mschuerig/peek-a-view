@@ -16,7 +16,7 @@ module PeekAView
       private
 
       def yslow_script
-        File.join(PeekAView::Engine.config.root, 'tools', 'yslow.js')
+        File.join(PeekAView::Engine.config.root, 'vendor', 'yslow.js')
       end
 
       def report_dir

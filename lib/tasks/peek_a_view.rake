@@ -28,6 +28,17 @@ namespace 'peek-a-view' do
     end
   end
 
+  task :init_html_validator do
+    require 'peek_a_view/tools/html_validator'
+
+    validator_uri = ENV['HTML_VALIDATOR'] || 'http://localhost:8888/'
+    @html_validator     = PeekAView::Tools::HtmlValidator.new(
+      validator_uri: validator_uri,
+      prefix:        @index_uri,
+      encoding:      Rails.configuration.encoding
+    )
+  end
+
   desc "List views served by Peek-a-View"
   task :list => :prepare do
     require 'peek_a_view/tools'
@@ -49,23 +60,47 @@ namespace 'peek-a-view' do
     end
 
     desc "Check view markup with validator.nu"
-    task :html => :prepare do
-      require 'peek_a_view/tools/html_validator'
-
-      validator_uri = ENV['HTML_VALIDATOR'] || 'http://localhost:8888/'
-      validator     = PeekAView::Tools::HtmlValidator.new(
-        validator_uri: validator_uri,
-        prefix:        @index_uri,
-        encoding:      Rails.configuration.encoding
-      )
-      validator.clean_reports
-
+    task :html => [:prepare, :init_html_validator] do
       @view_uris.each do |uri|
-        validator.report(uri)
+        puts "-" * 70
+        puts "Validation results for #{uri}"
+        @html_validator.check(uri)
       end
     end
 
-    desc "Check views with YSlow"
+    desc "Check views with YSlow and generate reports"
+    task :speed => :prepare do
+      require 'peek_a_view/tools/yslow'
+
+      yslow = PeekAView::Tools::YSlow.new(prefix: @index_uri)
+
+      @view_uris.each do |uri|
+        yslow.check(uri)
+      end
+    end
+  end
+
+
+  desc "Run all checks and generate reports"
+  task :report => 'report:run'
+
+  namespace :report do
+    task :run => [:html, :speed]
+
+    task :prepare do
+      Rake::Task['peek-a-view:prepare'].invoke
+    end
+
+    desc "Check view markup with validator.nu and generate reports"
+    task :html => [:prepare, :init_html_validator] do
+      @html_validator.clean_reports
+
+      @view_uris.each do |uri|
+        @html_validator.report(uri)
+      end
+    end
+
+    desc "Check views with YSlow and generate reports"
     task :speed => :prepare do
       require 'peek_a_view/tools/yslow'
 
